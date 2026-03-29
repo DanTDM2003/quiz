@@ -1,0 +1,239 @@
+openapi: 3.1.0
+info:
+  title: Real-time Quiz API
+  version: 0.1.0
+servers:
+  - url: https://api.example.com/v1
+paths:
+  /quizzes/{quizId}/participants:
+    post:
+      operationId: joinQuiz
+      parameters:
+        - $ref: '#/components/parameters/QuizId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinQuizRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JoinQuizResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /quizzes/{quizId}/answers:
+    post:
+      operationId: submitAnswer
+      parameters:
+        - $ref: '#/components/parameters/QuizId'
+        - $ref: '#/components/parameters/ParticipantId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitAnswerRequest'
+      responses:
+        '200':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitAnswerResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /quizzes/{quizId}/leaderboard:
+    get:
+      operationId: getLeaderboard
+      parameters:
+        - $ref: '#/components/parameters/QuizId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  parameters:
+    QuizId:
+      name: quizId
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    ParticipantId:
+      name: X-Participant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        minLength: 8
+        maxLength: 128
+  schemas:
+    JoinQuizRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - displayName
+      properties:
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 64
+    JoinQuizResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - quizId
+        - participantId
+      properties:
+        quizId:
+          type: string
+        participantId:
+          type: string
+    SubmitAnswerRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - questionId
+        - selectedOptionId
+      properties:
+        questionId:
+          type: string
+          minLength: 1
+        selectedOptionId:
+          type: string
+          minLength: 1
+    SubmitAnswerResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - quizId
+        - participantId
+        - questionId
+        - scoreDelta
+        - totalScore
+        - correct
+      properties:
+        quizId:
+          type: string
+        participantId:
+          type: string
+        questionId:
+          type: string
+        scoreDelta:
+          type: integer
+        totalScore:
+          type: integer
+          minimum: 0
+        correct:
+          type: boolean
+    LeaderboardEntry:
+      type: object
+      additionalProperties: false
+      required:
+        - rank
+        - participantId
+        - displayName
+        - totalScore
+      properties:
+        rank:
+          type: integer
+          minimum: 1
+        participantId:
+          type: string
+        displayName:
+          type: string
+        totalScore:
+          type: integer
+          minimum: 0
+    LeaderboardResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - quizId
+        - entries
+        - updatedAt
+      properties:
+        quizId:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+        updatedAt:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      additionalProperties: false
+      required:
+        - code
+        - message
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+    ErrorCode:
+      type: string
+      enum:
+        - QUIZ_NOT_FOUND
+        - QUIZ_NOT_ACTIVE
+        - PARTICIPANT_NOT_FOUND
+        - PARTICIPANT_NOT_IN_QUIZ
+        - QUESTION_NOT_FOUND
+        - QUESTION_ALREADY_ANSWERED
+        - INVALID_OPTION
+        - IDEMPOTENCY_KEY_REUSE_MISMATCH
+        - RATE_LIMITED
+        - INTERNAL_ERROR

@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/quiz/ws-events.schema.json",
+  "title": "QuizSessionWebSocketMessages",
+  "oneOf": [
+    { "$ref": "#/$defs/ClientJoin" },
+    { "$ref": "#/$defs/ServerWelcome" },
+    { "$ref": "#/$defs/ServerParticipantJoined" },
+    { "$ref": "#/$defs/ServerScoreUpdated" },
+    { "$ref": "#/$defs/ServerLeaderboardUpdated" },
+    { "$ref": "#/$defs/ServerError" }
+  ],
+  "$defs": {
+    "ClientJoin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "quizId", "participantId"],
+      "properties": {
+        "type": { "const": "join" },
+        "quizId": { "type": "string", "minLength": 1 },
+        "participantId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ServerWelcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "quizId", "participantId"],
+      "properties": {
+        "type": { "const": "welcome" },
+        "quizId": { "type": "string", "minLength": 1 },
+        "participantId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ServerParticipantJoined": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "quizId", "participantId", "displayName"],
+      "properties": {
+        "type": { "const": "participant_joined" },
+        "quizId": { "type": "string", "minLength": 1 },
+        "participantId": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1, "maxLength": 64 }
+      }
+    },
+    "ServerScoreUpdated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "quizId",
+        "participantId",
+        "questionId",
+        "scoreDelta",
+        "totalScore",
+        "correct",
+        "updatedAt"
+      ],
+      "properties": {
+        "type": { "const": "score_updated" },
+        "quizId": { "type": "string", "minLength": 1 },
+        "participantId": { "type": "string", "minLength": 1 },
+        "questionId": { "type": "string", "minLength": 1 },
+        "scoreDelta": { "type": "integer" },
+        "totalScore": { "type": "integer", "minimum": 0 },
+        "correct": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ServerLeaderboardUpdated": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "quizId", "entries", "updatedAt"],
+      "properties": {
+        "type": { "const": "leaderboard_updated" },
+        "quizId": { "type": "string", "minLength": 1 },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["rank", "participantId", "displayName", "totalScore"],
+            "properties": {
+              "rank": { "type": "integer", "minimum": 1 },
+              "participantId": { "type": "string", "minLength": 1 },
+              "displayName": { "type": "string", "minLength": 1 },
+              "totalScore": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ServerError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "code", "message"],
+      "properties": {
+        "type": { "const": "error" },
+        "code": {
+          "type": "string",
+          "enum": [
+            "QUIZ_NOT_FOUND",
+            "QUIZ_NOT_ACTIVE",
+            "PARTICIPANT_NOT_FOUND",
+            "PARTICIPANT_NOT_IN_QUIZ",
+            "QUESTION_NOT_FOUND",
+            "QUESTION_ALREADY_ANSWERED",
+            "INVALID_OPTION",
+            "IDEMPOTENCY_KEY_REUSE_MISMATCH",
+            "RATE_LIMITED",
+            "INTERNAL_ERROR"
+          ]
+        },
+        "message": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
