@@ -46,23 +46,44 @@ After `POST /v1/quizzes/{quizId}/participants`, clients open `wss://api.example.
 5. **Realtime** — `GET /v1/quizzes/{quizId}/stream` WebSocket hub per `quizId`, broadcast `participant_joined`, `score_updated`, `leaderboard_updated` (done).
 6. **Leaderboard HTTP** — `GET /v1/quizzes/{quizId}/leaderboard` aligned with domain ordering (done).
 7. **Hardening** — Integration tests with multiple goroutines/clients; optional rate limits.
-8. **Docker + Makefile** — reproducible local runs on macOS, Linux, and Windows with Docker Desktop.
+8. **Docker + Makefile** — reproducible local runs on macOS, Linux, and Windows with Docker Desktop (done).
 
 Each phase should be one focused commit (or `feat` + `test` if you split implementation and tests).
 
 ## How to run
 
-Requires Go 1.22 or newer.
+Requires Go 1.22 or newer for local development.
 
 ```bash
-go test ./...
-go run ./cmd/server
+make test
+make run
 ```
 
-The server listens on port 3000 by default (`PORT` overrides). A seeded quiz id `sample-quiz` exists.
+Or without Make: `go test ./...` and `go run ./cmd/server`.
+
+### Docker
+
+Requires [Docker](https://docs.docker.com/get-docker/) with Compose v2 (`docker compose`, not only the legacy `docker-compose` binary).
 
 ```bash
-curl -s -X POST http://localhost:3000/v1/quizzes/sample-quiz/participants \
+make docker-build
+make up
+```
+
+Or: `docker compose up --build -d`. The API is available at `http://localhost:8080` (map host port in `docker-compose.yml` if you need another port).
+
+```bash
+make down
+```
+
+### Makefile
+
+Run `make help` for targets. On Windows, **WSL2** or **Git Bash** usually provide `make`; otherwise run the same shell commands from this section (`go test ./...`, `docker compose up --build -d`).
+
+The server listens on port 8080 by default (`PORT` overrides). A seeded quiz id `sample-quiz` exists.
+
+```bash
+curl -s -X POST http://localhost:8080/v1/quizzes/sample-quiz/participants \
   -H 'content-type: application/json' \
   -d '{"displayName":"Ada"}'
 ```
@@ -70,7 +91,7 @@ curl -s -X POST http://localhost:3000/v1/quizzes/sample-quiz/participants \
 Use the returned `participantId` as `X-Participant-Id` when submitting. Question `q1` accepts options `a`, `b`, or `c` (correct is `a`, 10 points).
 
 ```bash
-curl -s -X POST http://localhost:3000/v1/quizzes/sample-quiz/answers \
+curl -s -X POST http://localhost:8080/v1/quizzes/sample-quiz/answers \
   -H 'content-type: application/json' \
   -H 'X-Participant-Id: <participantId>' \
   -H 'Idempotency-Key: client-req-0001' \
@@ -80,7 +101,5 @@ curl -s -X POST http://localhost:3000/v1/quizzes/sample-quiz/answers \
 Snapshot leaderboard (same ordering and ranks as WebSocket `leaderboard_updated`):
 
 ```bash
-curl -s http://localhost:3000/v1/quizzes/sample-quiz/leaderboard
+curl -s http://localhost:8080/v1/quizzes/sample-quiz/leaderboard
 ```
-
-Docker and Makefile are planned for phase 8.

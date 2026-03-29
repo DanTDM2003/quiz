@@ -20,7 +20,7 @@ func main() {
 	mux.HandleFunc("GET /v1/quizzes/{quizId}/stream", api.StreamHandler(reg, hub))
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "8080"
 	}
 	log.Printf("listening on :%s", port)
 	if err := http.ListenAndServe(":"+port, mux); err != nil {
