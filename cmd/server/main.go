@@ -13,6 +13,7 @@ func main() {
 	reg := quiz.SeededRegistry()
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/quizzes/{quizId}/participants", api.JoinHandler(reg))
+	mux.HandleFunc("POST /v1/quizzes/{quizId}/answers", api.SubmitAnswerHandler(reg))
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"

@@ -6,16 +6,6 @@ import (
 	"quiz/internal/id"
 )
 
-type Participant struct {
-	DisplayName string
-}
-
-type Quiz struct {
-	ID           string
-	Active       bool
-	Participants map[string]Participant
-}
-
 type Registry struct {
 	mu      sync.RWMutex
 	quizzes map[string]*Quiz
@@ -46,18 +36,34 @@ func (r *Registry) Join(quizID, displayName string) (participantID string, errCo
 		return "", "INTERNAL_ERROR"
 	}
 	if q.Participants == nil {
-		q.Participants = make(map[string]Participant)
+		q.Participants = make(map[string]*Participant)
 	}
-	q.Participants[pid] = Participant{DisplayName: displayName}
+	q.Participants[pid] = &Participant{
+		DisplayName: displayName,
+		Answered:    make(map[string]struct{}),
+		Idempotency: make(map[string]IdempotencyRecord),
+	}
 	return pid, ""
 }
 
 func SeededRegistry() *Registry {
 	r := NewRegistry()
 	r.Register(&Quiz{
-		ID:           "sample-quiz",
-		Active:       true,
-		Participants: make(map[string]Participant),
+		ID:     "sample-quiz",
+		Active: true,
+		Questions: map[string]*Question{
+			"q1": {
+				ID:              "q1",
+				CorrectOptionID: "a",
+				Points:          10,
+				Options: map[string]struct{}{
+					"a": {},
+					"b": {},
+					"c": {},
+				},
+			},
+		},
+		Participants: make(map[string]*Participant),
 	})
 	return r
 }

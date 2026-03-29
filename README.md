@@ -41,7 +41,7 @@ After `POST /v1/quizzes/{quizId}/participants`, clients open `wss://api.example.
 1. **Contracts** — README assumptions + `contracts/` (done).
 2. **Domain** — `internal/domain` table-driven tests; no I/O (done).
 3. **Join session** — `POST /v1/quizzes/{quizId}/participants` + registry (done).
-4. **Submit answers** — `POST /v1/quizzes/{quizId}/answers`, idempotency, score state per participant.
+4. **Submit answers** — `POST /v1/quizzes/{quizId}/answers`, idempotency, score state per participant (done).
 5. **Realtime** — WebSocket hub per `quizId`, broadcast `score_updated` / `leaderboard_updated`.
 6. **Leaderboard HTTP** — `GET /v1/quizzes/{quizId}/leaderboard` aligned with domain ordering.
 7. **Hardening** — Integration tests with multiple goroutines/clients; optional rate limits.
@@ -64,6 +64,16 @@ The server listens on port 3000 by default (`PORT` overrides). A seeded quiz id 
 curl -s -X POST http://localhost:3000/v1/quizzes/sample-quiz/participants \
   -H 'content-type: application/json' \
   -d '{"displayName":"Ada"}'
+```
+
+Use the returned `participantId` as `X-Participant-Id` when submitting. Question `q1` accepts options `a`, `b`, or `c` (correct is `a`, 10 points).
+
+```bash
+curl -s -X POST http://localhost:3000/v1/quizzes/sample-quiz/answers \
+  -H 'content-type: application/json' \
+  -H 'X-Participant-Id: <participantId>' \
+  -H 'Idempotency-Key: client-req-0001' \
+  -d '{"questionId":"q1","selectedOptionId":"a"}'
 ```
 
 Docker and Makefile are planned for phase 8.

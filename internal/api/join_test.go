@@ -17,7 +17,7 @@ func TestJoinSampleQuiz(t *testing.T) {
 	reg.Register(&quiz.Quiz{
 		ID:           "sample-quiz",
 		Active:       true,
-		Participants: make(map[string]quiz.Participant),
+		Participants: make(map[string]*quiz.Participant),
 	})
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/quizzes/{quizId}/participants", JoinHandler(reg))
@@ -76,7 +76,7 @@ func TestJoinInactive(t *testing.T) {
 	reg.Register(&quiz.Quiz{
 		ID:           "closed",
 		Active:       false,
-		Participants: make(map[string]quiz.Participant),
+		Participants: make(map[string]*quiz.Participant),
 	})
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/quizzes/{quizId}/participants", JoinHandler(reg))
