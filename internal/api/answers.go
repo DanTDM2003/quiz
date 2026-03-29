@@ -5,8 +5,10 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 
 	"quiz/internal/quiz"
+	"quiz/internal/realtime"
 )
 
 type submitAnswerRequest struct {
@@ -23,7 +25,7 @@ type submitAnswerResponse struct {
 	Correct       bool   `json:"correct"`
 }
 
-func SubmitAnswerHandler(reg *quiz.Registry) http.HandlerFunc {
+func SubmitAnswerHandler(reg *quiz.Registry, hub *realtime.Hub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, maxJSONBody)
 		raw, err := io.ReadAll(r.Body)
@@ -67,6 +69,11 @@ func SubmitAnswerHandler(reg *quiz.Registry) http.HandlerFunc {
 				TotalScore:    result.TotalScore,
 				Correct:       result.Correct,
 			})
+			if hub != nil {
+				ts := time.Now().UTC()
+				hub.BroadcastScoreUpdated(quizID, result, ts)
+				hub.BroadcastLeaderboardUpdated(quizID, reg, ts)
+			}
 		case "QUIZ_NOT_FOUND":
 			writeErr(w, http.StatusNotFound, "QUIZ_NOT_FOUND", "Quiz not found")
 		case "PARTICIPANT_NOT_IN_QUIZ":

@@ -15,7 +15,7 @@ func TestSubmitAnswerHTTP(t *testing.T) {
 	reg := quiz.SeededRegistry()
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /v1/quizzes/{quizId}/participants", JoinHandler(reg))
-	mux.HandleFunc("POST /v1/quizzes/{quizId}/answers", SubmitAnswerHandler(reg))
+	mux.HandleFunc("POST /v1/quizzes/{quizId}/answers", SubmitAnswerHandler(reg, nil))
 	srv := httptest.NewServer(mux)
 	t.Cleanup(srv.Close)
 

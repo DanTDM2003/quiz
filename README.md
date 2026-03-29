@@ -32,7 +32,8 @@ After `POST /v1/quizzes/{quizId}/participants`, clients open `wss://api.example.
 | `cmd/server` | HTTP entrypoint |
 | `internal/domain` | Pure scoring and leaderboard ordering |
 | `internal/quiz` | In-memory quiz registry (to be backed by storage later if needed) |
-| `internal/api` | HTTP handlers |
+| `internal/api` | HTTP + WebSocket handlers |
+| `internal/realtime` | WebSocket hub and broadcast helpers |
 | `internal/id` | Small helpers (UUID generation) |
 | `contracts/` | OpenAPI + JSON Schema (unchanged by implementation language) |
 
@@ -42,7 +43,7 @@ After `POST /v1/quizzes/{quizId}/participants`, clients open `wss://api.example.
 2. **Domain** — `internal/domain` table-driven tests; no I/O (done).
 3. **Join session** — `POST /v1/quizzes/{quizId}/participants` + registry (done).
 4. **Submit answers** — `POST /v1/quizzes/{quizId}/answers`, idempotency, score state per participant (done).
-5. **Realtime** — WebSocket hub per `quizId`, broadcast `score_updated` / `leaderboard_updated`.
+5. **Realtime** — `GET /v1/quizzes/{quizId}/stream` WebSocket hub per `quizId`, broadcast `participant_joined`, `score_updated`, `leaderboard_updated` (done).
 6. **Leaderboard HTTP** — `GET /v1/quizzes/{quizId}/leaderboard` aligned with domain ordering.
 7. **Hardening** — Integration tests with multiple goroutines/clients; optional rate limits.
 8. **Docker + Makefile** — reproducible local runs on macOS, Linux, and Windows with Docker Desktop.

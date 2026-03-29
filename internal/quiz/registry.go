@@ -3,6 +3,7 @@ package quiz
 import (
 	"sync"
 
+	"quiz/internal/domain"
 	"quiz/internal/id"
 )
 
@@ -44,6 +45,41 @@ func (r *Registry) Join(quizID, displayName string) (participantID string, errCo
 		Idempotency: make(map[string]IdempotencyRecord),
 	}
 	return pid, ""
+}
+
+func (r *Registry) LookupParticipant(quizID, participantID string) (displayName string, errCode string) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	q, ok := r.quizzes[quizID]
+	if !ok {
+		return "", "QUIZ_NOT_FOUND"
+	}
+	if !q.Active {
+		return "", "QUIZ_NOT_ACTIVE"
+	}
+	p, ok := q.Participants[participantID]
+	if !ok {
+		return "", "PARTICIPANT_NOT_IN_QUIZ"
+	}
+	return p.DisplayName, ""
+}
+
+func (r *Registry) ParticipantStandings(quizID string) ([]domain.ParticipantStanding, string) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	q, ok := r.quizzes[quizID]
+	if !ok {
+		return nil, "QUIZ_NOT_FOUND"
+	}
+	out := make([]domain.ParticipantStanding, 0, len(q.Participants))
+	for id, p := range q.Participants {
+		out = append(out, domain.ParticipantStanding{
+			ParticipantID: id,
+			DisplayName:   p.DisplayName,
+			TotalScore:    p.TotalScore,
+		})
+	}
+	return out, ""
 }
 
 func SeededRegistry() *Registry {
