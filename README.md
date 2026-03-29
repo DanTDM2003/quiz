@@ -44,7 +44,7 @@ After `POST /v1/quizzes/{quizId}/participants`, clients open `wss://api.example.
 3. **Join session** — `POST /v1/quizzes/{quizId}/participants` + registry (done).
 4. **Submit answers** — `POST /v1/quizzes/{quizId}/answers`, idempotency, score state per participant (done).
 5. **Realtime** — `GET /v1/quizzes/{quizId}/stream` WebSocket hub per `quizId`, broadcast `participant_joined`, `score_updated`, `leaderboard_updated` (done).
-6. **Leaderboard HTTP** — `GET /v1/quizzes/{quizId}/leaderboard` aligned with domain ordering.
+6. **Leaderboard HTTP** — `GET /v1/quizzes/{quizId}/leaderboard` aligned with domain ordering (done).
 7. **Hardening** — Integration tests with multiple goroutines/clients; optional rate limits.
 8. **Docker + Makefile** — reproducible local runs on macOS, Linux, and Windows with Docker Desktop.
 
@@ -75,6 +75,12 @@ curl -s -X POST http://localhost:3000/v1/quizzes/sample-quiz/answers \
   -H 'X-Participant-Id: <participantId>' \
   -H 'Idempotency-Key: client-req-0001' \
   -d '{"questionId":"q1","selectedOptionId":"a"}'
+```
+
+Snapshot leaderboard (same ordering and ranks as WebSocket `leaderboard_updated`):
+
+```bash
+curl -s http://localhost:3000/v1/quizzes/sample-quiz/leaderboard
 ```
 
 Docker and Makefile are planned for phase 8.
